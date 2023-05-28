@@ -1,0 +1,74 @@
+// ==UserScript==
+// @name         Lab3_1
+// @namespace    http://tampermonkey.net/
+// @version      0.1
+// @description  try to take over the world!
+// @author       paguilera
+// @match        *://cripto.tiiny.site/*
+// @require      https://code.jquery.com/jquery-3.7.0.min.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js
+// @run-at       document-end
+// @grant        none
+// ==/UserScript==
+
+//var a = jQuery();
+
+(function() {
+var parrafo;
+var key = [];
+var oraciones;
+var mensajes_encriptados = [];
+var mensajes_desencriptados = [];
+var regex = /M[1-3]/g;
+var elements = jQuery("[class^='M']");
+
+
+parrafo = jQuery('.Parrafo').find('p').eq(0).text();
+oraciones = parrafo.split('.');
+
+for (var i = 0; i < oraciones.length; i++) {
+    var oracion = oraciones[i];
+    oracion = oracion.split('');
+
+    for(var j=0; j<oracion.length;j++){
+        if(oracion.length > 0 && oracion[j]!="\n" && oracion[j]!=" "){
+            var letra = oracion[j];
+            key = key.concat(letra);
+            break;
+        }
+    }
+}
+key = key.join();
+
+for (i = 0; i < key.length; i++){
+    key = key.replace(',','');
+}
+console.log("La llave es: " + key);
+
+elements.each(function(){
+    var clase = jQuery(this).attr('class');
+    if (clase.match(/^M\d+$/)){
+        var id = jQuery(this).attr('id');
+    mensajes_encriptados.push(id);
+    }
+});
+
+console.log("Los mensajes cifrados son: " + mensajes_encriptados.length);
+
+for (i = 0; i < mensajes_encriptados.length; i++) {
+    var mensaje_encriptado = mensajes_encriptados[i];
+    //mensaje_encriptado = CryptoJS.enc.Hex.parse(mensaje_encriptado);
+    mensaje_encriptado = CryptoJS.enc.Base64.parse(mensaje_encriptado);
+    var mensaje_desencriptado = CryptoJS.TripleDES.decrypt({ciphertext: mensaje_encriptado}, key, { mode: CryptoJS.mode.ECB});
+    mensaje_desencriptado = CryptoJS.enc.Utf8.parse(mensaje_encriptado);
+    mensaje_desencriptado = mensaje_desencriptado.toString();
+    mensajes_desencriptados.push(mensaje_desencriptado)
+    console.log(mensajes_encriptados[i] + " = " + mensaje_desencriptado);
+};
+
+
+for (i = 0; i < mensajes_desencriptados.length; i++) {
+    jQuery('<p>').text(mensajes_desencriptados[i]).appendTo('body');
+}
+
+}) ();
